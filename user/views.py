@@ -37,11 +37,16 @@ class UserLogIn(APIView):
 
         return response
     
-class UserView(APIView):
+class UserPasswordView(APIView):
     def get(self,request):
-        token=request.COOKIES.get('jwt')
-
-        payload=jwt.decode(token,'secret',algorithms=['HS256'])
-        user=users.objects.filter(id=payload['id']).first()
-        serializer=user_serializer(user)
-        return Response(serializer.data)
+        serializer=user_serializer(request.user)
+        if not serializer:
+            return Response({"error":"Unauthenticated"},status=403)
+        return Response({"username":serializer.data['username']})
+    
+class UserProfileView(APIView):
+    def get(self,request):
+        serializer=user_serializer(request.user)
+        if serializer.data['role'] != 'admin':
+            return Response({"error":"Unauthenticated"},status=403)
+        return Response({"Message":"Success"})
